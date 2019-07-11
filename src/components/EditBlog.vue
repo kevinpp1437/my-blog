@@ -1,6 +1,6 @@
 <template>
   <div id="addblog">
-    <h3 class="add">添加博客</h3>
+    <h3 v-if="!submitted" class="add">编辑博客</h3>
     <form v-if="!submitted">
       <div class="item">
         <label for>主题:</label>
@@ -30,13 +30,14 @@
         </select>
       </div>
       <div>
-        <button class="btn" v-on:click.prevent="deliver">添加博客</button>
+        <button class="btn" v-on:click.prevent="deliver">确认</button>
       </div>
     </form>
-    <br><br>
-    <hr />
+    <br />
+    <br />
+    <hr v-if="!submitted" />
     <div v-if="submitted">
-      <h3>你的博客已发布成功</h3>
+      <h3 class="after">你的博客已修改成功</h3>
     </div>
     <div id="preview">
       <h3>博客总览</h3>
@@ -44,7 +45,7 @@
       <p>博客内容:{{blog.content}}</p>
     </div>
     <span>分类:</span>
-      <span v-for="(item,index) in blog.cates" :key="index">{{item}}、</span>
+    <span v-for="(item,index) in blog.cates" :key="index">{{item}}、</span>
   </div>
 </template>
 
@@ -53,6 +54,7 @@ export default {
   name: "AddBlog",
   data: function() {
     return {
+      id: this.$route.params.id,
       blog: {
         msg: "kevin1437",
         title: "",
@@ -69,21 +71,36 @@ export default {
       this.$axios({
         method: "post",
         url: "http://jsonplaceholder.typicode.com/posts",
-        data:this.blog
-        // data: {
-        //   title: this.blog.title,
-        //   body: this.blog.content,
-        //   userId: 1
-        // }
+        data: {
+          title: this.blog.title,
+          body: this.blog.content,
+          userId: 1
+        }
       })
         .then(res => {
           console.log(res.data);
           this.submitted = true;
+          setTimeout(() => {
+            this.$router.push("/");
+          }, 2000);
         })
         .catch(err => {
           console.log(err);
         });
     }
+    // ending:function(){
+    //     this.$router.push('/')
+    // }
+  },
+  created() {
+    this.$axios
+      .get("https://jsonplaceholder.typicode.com/posts/" + this.id)
+      .then(res => {
+        console.log(res.data);
+        this.blog.title = res.data.title;
+        this.blog.content = res.data.body;
+        this.blog.author = this.authors[res.data.userId];
+      });
   }
 };
 </script>
@@ -106,14 +123,17 @@ export default {
 }
 h3.add {
   position: relative;
-  left:-70px;
+  left: -70px;
   padding-top: 10px;
   color: black;
   font-weight: 900;
 }
+h3.after {
+  color: blue;
+}
 div.item > input {
   border: 1px solid black;
-  padding:4px;
+  padding: 4px;
 }
 div.content {
   position: relative;
@@ -126,7 +146,7 @@ div.content > label {
   top: -192px;
   left: 30px;
 }
-div.content >textarea{
+div.content > textarea {
   display: inline-block;
   position: relative;
   left: 30px;
@@ -164,5 +184,4 @@ div.author > select {
   padding: 10px;
   border-radius: 10px;
 }
-
 </style>
